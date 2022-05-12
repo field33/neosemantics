@@ -1,10 +1,5 @@
 package n10s.onto;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import n10s.CommonProcedures;
 import n10s.ConfiguredStatementHandler.TripleLimitReached;
 import n10s.RDFImportException;
@@ -25,6 +20,12 @@ import org.neo4j.graphdb.Transaction;
 import org.neo4j.logging.Log;
 import org.neo4j.procedure.Context;
 import org.neo4j.procedure.Name;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class OntoProcedures extends CommonProcedures {
 

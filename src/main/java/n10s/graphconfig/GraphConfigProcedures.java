@@ -1,15 +1,12 @@
 package n10s.graphconfig;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.stream.Stream;
 import n10s.graphconfig.GraphConfig.GraphConfigNotFound;
 import n10s.graphconfig.GraphConfig.InvalidParamException;
 import n10s.result.GraphConfigItemResult;
+import org.apache.commons.collections.iterators.IteratorChain;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.ResourceIterator;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.logging.Log;
 import org.neo4j.procedure.Context;
@@ -17,6 +14,11 @@ import org.neo4j.procedure.Description;
 import org.neo4j.procedure.Mode;
 import org.neo4j.procedure.Name;
 import org.neo4j.procedure.Procedure;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Stream;
 
 public class GraphConfigProcedures {
 
@@ -39,8 +41,13 @@ public class GraphConfigProcedures {
       try {
         GraphConfig currentGraphConfig = new GraphConfig(props);
         Map<String, Object> queryParams = new HashMap<>();
-        queryParams.put("props", currentGraphConfig.serialiseConfig());
-        tx.execute("MERGE (gc:_GraphConfig) SET gc+= $props", queryParams);
+        Map config = currentGraphConfig.serialiseConfig();
+        Map nodeProps = (Map<String, Object>) config.remove("_forciblyAssignedOnImportNodeProperties");
+
+        queryParams.put("props", config);
+        queryParams.put("nodeProps", nodeProps);
+
+        tx.execute("MERGE (gc:_GraphConfig)-[:HAS]-(np:_ForciblyAssignedOnImportNodeProperties) SET gc += $props, np += $nodeProps", queryParams);
         return currentGraphConfig.getAsGraphConfigResults().stream();
       } catch (InvalidParamException ipe) {
         throw new GraphConfigException(ipe.getMessage());
@@ -70,8 +77,13 @@ public class GraphConfigProcedures {
         throw new GraphConfigException(ipe.getMessage());
       }
       Map<String, Object> queryParams = new HashMap<>();
-      queryParams.put("props", currentGraphConfig.serialiseConfig());
-      tx.execute("MERGE (gc:_GraphConfig) SET gc+= $props", queryParams);
+      Map config = currentGraphConfig.serialiseConfig();
+      Map nodeProps = (Map<String, Object>) config.remove("_forciblyAssignedOnImportNodeProperties");
+
+      queryParams.put("props", config);
+      queryParams.put("nodeProps", nodeProps);
+
+      tx.execute("MERGE (gc:_GraphConfig)-[:HAS]-(np:_ForciblyAssignedOnImportNodeProperties) SET gc += $props, np += $nodeProps", queryParams);
       return currentGraphConfig.getAsGraphConfigResults().stream();
     } else {
       throw new GraphConfigException("The graph is non-empty. Config cannot be changed.");
@@ -95,11 +107,25 @@ public class GraphConfigProcedures {
       throw new GraphConfigException("The graph is non-empty. Config cannot be changed.");
     }
 
-    ResourceIterator<Node> graphConfigs = tx
-        .findNodes(Label.label("_GraphConfig"));
+    ArrayList<String> labels = new ArrayList();
+    labels.add("_GraphConfig");
+    labels.add("_ForciblyAssignedOnImportNodeProperties");
 
-    if (graphConfigs.hasNext()) {
-      graphConfigs.next().delete();
+    IteratorChain chain = labels.stream()
+      .map((label) -> tx.findNodes(Label.label(label)))
+      .reduce(
+        new IteratorChain(),
+        (iteratorChain, nodesIterator) -> {
+          iteratorChain.addIterator(nodesIterator);
+          return iteratorChain;
+        },
+        (iteratorChain1, iteratorChain2) -> {
+          iteratorChain1.addIterator(iteratorChain2);
+          return iteratorChain1;
+        });
+
+    while (chain.hasNext()) {
+      ((Node) chain.next()).delete();
     }
 
     return Stream.empty();

@@ -1,5 +1,12 @@
 package n10s.graphconfig;
 
+import n10s.result.GraphConfigItemResult;
+import org.apache.commons.collections.map.HashedMap;
+import org.eclipse.rdf4j.model.util.URIUtil;
+import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Result;
+import org.neo4j.graphdb.Transaction;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -8,13 +15,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
-import n10s.result.GraphConfigItemResult;
-import org.eclipse.rdf4j.model.util.URIUtil;
-import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.Result;
-import org.neo4j.graphdb.Transaction;
 
-import static n10s.graphconfig.Params.*;
+import static n10s.graphconfig.Params.DEFAULT_BASE_SCH_NS;
+import static n10s.graphconfig.Params.DEFAULT_BASE_SCH_PREFIX;
+import static n10s.graphconfig.Params.PREFIX_PATTERN;
 
 public class GraphConfig {
 
@@ -73,6 +77,8 @@ public class GraphConfig {
   private String rangeRelName;
   private String baseSchemaNamespace;
   private String baseSchemaNamespacePrefix;
+
+  private Map<String, Object> forciblyAssignedOnImportNodeProperties;
 
 
   public GraphConfig(Map<String, Object> props) throws InvalidParamException {
@@ -138,10 +144,14 @@ public class GraphConfig {
         props.containsKey("domainRel") ? (String) props.get("domainRel") : DEFAULT_DOMAIN_REL_NAME;
     this.rangeRelName =
         props.containsKey("rangeRel") ? (String) props.get("rangeRel") : DEFAULT_RANGE_REL_NAME;
+
+    this.forciblyAssignedOnImportNodeProperties = props.containsKey("forciblyAssignedOnImportNodeProperties") && props.get("forciblyAssignedOnImportNodeProperties") != null
+        ? (Map<String, Object>) props.get("forciblyAssignedOnImportNodeProperties")
+        : new HashMap();
   }
 
   public GraphConfig(Transaction tx) throws GraphConfigNotFound {
-    Result gcResult = tx.execute("MATCH (gc:_GraphConfig) RETURN gc ");
+    Result gcResult = tx.execute("MATCH (gc:_GraphConfig) OPTIONAL MATCH (gc)-[:HAS*0..1]-(nodeProps:_ForciblyAssignedOnImportNodeProperties) RETURN gc, nodeProps");
     if (gcResult.hasNext()) {
       Map<String, Object> singleRecord = gcResult.next();
       Map<String, Object> graphConfigProperties = ((Node) singleRecord.get("gc"))
@@ -184,6 +194,15 @@ public class GraphConfig {
       this.rangeRelName =
           graphConfigProperties.containsKey("_rangeRel") ? (String) graphConfigProperties
               .get("_rangeRel") : DEFAULT_RANGE_REL_NAME;
+
+      if (singleRecord.containsKey("nodeProps") && singleRecord.get("nodeProps") != null) {
+        Map<String, Object> nodeProperties = ((Node) singleRecord.get("nodeProps"))
+            .getAllProperties();
+        nodeProperties.remove("identity");
+        this.forciblyAssignedOnImportNodeProperties = nodeProperties;
+      } else {
+        this.forciblyAssignedOnImportNodeProperties = new HashMap();
+      }
     } else {
       throw new GraphConfigNotFound();
     }
@@ -328,6 +347,8 @@ public class GraphConfig {
     result.add(new GraphConfigItemResult("domainRel", getDomainRelName()));
     result.add(new GraphConfigItemResult("rangeRel", getRangeRelName()));
 
+    result.add(new GraphConfigItemResult("forciblyAssignedOnImportNodeProperties", getForciblyAssignedOnImportNodeProperties()));
+
     return result;
   }
 
@@ -353,6 +374,8 @@ public class GraphConfig {
     configAsMap.put("_subPropertyOfRel", this.subPropertyOfRelName);
     configAsMap.put("_domainRel", this.domainRelName);
     configAsMap.put("_rangeRel", this.rangeRelName);
+
+    configAsMap.put("_forciblyAssignedOnImportNodeProperties", this.forciblyAssignedOnImportNodeProperties);
 
     return configAsMap;
   }
@@ -439,6 +462,14 @@ public class GraphConfig {
     //TODO: create a config param for skosRelatedConceptRelName
   }
 
+  public Map<String, Object> getForciblyAssignedOnImportNodeProperties() {
+    if (this.forciblyAssignedOnImportNodeProperties == null) {
+      this.forciblyAssignedOnImportNodeProperties = new HashMap();
+    }
+
+    return this.forciblyAssignedOnImportNodeProperties;
+  }
+
   public void add(Map<String, Object> props) throws InvalidParamException {
     if (props.containsKey("handleVocabUris")) {
       this.handleVocabUris = parseHandleVocabUrisValue((String) props.get("handleVocabUris"));
@@ -494,6 +525,13 @@ public class GraphConfig {
     }
     if (props.containsKey("rangeRel")) {
       this.rangeRelName = (String) props.get("rangeRel");
+    }
+    if (props.containsKey("forciblyAssignedOnImportNodeProperties")) {
+      if (props.containsKey("forciblyAssignedOnImportNodeProperties") && props.get("forciblyAssignedOnImportNodeProperties") != null) {
+        this.forciblyAssignedOnImportNodeProperties = (Map<String, Object>) props.get("forciblyAssignedOnImportNodeProperties");
+      } else {
+        this.forciblyAssignedOnImportNodeProperties = new HashedMap();
+      }
     }
   }
 

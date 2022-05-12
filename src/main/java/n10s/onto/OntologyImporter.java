@@ -2,12 +2,6 @@ package n10s.onto;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-
-import java.util.*;
-import java.util.Map.Entry;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.stream.Collectors;
 import n10s.RDFToLPGStatementProcessor;
 import n10s.graphconfig.RDFParserConfig;
 import org.eclipse.rdf4j.model.BNode;
@@ -27,6 +21,19 @@ import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.logging.Log;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 import static n10s.graphconfig.GraphConfig.GRAPHCONF_VOC_URI_SHORTEN;
 import static n10s.graphconfig.GraphConfig.GRAPHCONF_VOC_URI_SHORTEN_STRICT;
@@ -323,6 +330,11 @@ public class OntologyImporter extends RDFToLPGStatementProcessor {
               if (node == null) {
                 node = inThreadTransaction.createNode(RESOURCE);
                 node.setProperty("uri", entry.getKey());
+
+                Node finalNode = node;
+                parserConfig.getGraphConf().getForciblyAssignedOnImportNodeProperties().forEach((propName, propValue) ->
+                    finalNode.setProperty(propName, propValue)
+                );
               }
               return node;
             }

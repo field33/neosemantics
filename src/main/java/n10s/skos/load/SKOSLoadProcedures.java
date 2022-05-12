@@ -1,8 +1,5 @@
 package n10s.skos.load;
 
-import java.io.IOException;
-import java.util.Map;
-import java.util.stream.Stream;
 import n10s.RDFImportException;
 import n10s.graphconfig.GraphConfig;
 import n10s.graphconfig.RDFParserConfig;
@@ -15,6 +12,10 @@ import org.neo4j.procedure.Description;
 import org.neo4j.procedure.Mode;
 import org.neo4j.procedure.Name;
 import org.neo4j.procedure.Procedure;
+
+import java.io.IOException;
+import java.util.Map;
+import java.util.stream.Stream;
 
 public class SKOSLoadProcedures extends RDFProcedures {
 

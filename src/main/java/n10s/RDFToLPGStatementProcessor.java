@@ -309,6 +309,7 @@ public abstract class RDFToLPGStatementProcessor extends ConfiguredStatementHand
     Map<String, Object> props = new HashMap<>();
     //props.put("uri", subjectUri); this was in the preview version probably removed as an optimisation
     m.put(subjectUri, props);
+
     return props;
   }
 
