@@ -47,12 +47,12 @@ public class OntoProcedures extends CommonProcedures {
     RDFFormat rdfFormat = null;
     ImportResults importResults = new ImportResults();
     try {
-      checkConstraintExist();
+//      checkConstraintExist();
       conf = new RDFParserConfig(props, new GraphConfig(tx));
       rdfFormat = getFormat(format);
       ontoImporter = new OntologyImporter(db, tx, conf, log);
-    } catch (RDFImportPreRequisitesNotMet e) {
-      importResults.setTerminationKO(e.getMessage());
+//    } catch (RDFImportPreRequisitesNotMet e) {
+//      importResults.setTerminationKO(e.getMessage());
     } catch (RDFImportBadParams e) {
       importResults.setTerminationKO(e.getMessage());
     }

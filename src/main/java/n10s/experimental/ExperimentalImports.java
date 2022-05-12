@@ -39,7 +39,7 @@ public class ExperimentalImports extends RDFProcedures {
     }
 
     try {
-      checkConstraintExist();
+//      checkConstraintExist();
       RDFParserConfig conf = new RDFParserConfig(new HashMap<>(), new GraphConfig(tx));
       String containerUri = (String) containerNode.getProperty("uri", null);
       PlainJsonStatementLoader plainJSONStatementLoader = new PlainJsonStatementLoader(db, tx, conf,
@@ -55,7 +55,8 @@ public class ExperimentalImports extends RDFProcedures {
       rdfParser.parse(new ByteArrayInputStream(jsonPayload.getBytes(Charset.defaultCharset())),
           "neo4j://voc#", containerUri, relName);
 
-    } catch (IOException | RDFHandlerException | QueryExecutionException | RDFParseException | RDFImportPreRequisitesNotMet e) {
+//    } catch (IOException | RDFHandlerException | QueryExecutionException | RDFParseException | RDFImportPreRequisitesNotMet e) {
+    } catch (IOException | RDFHandlerException | QueryExecutionException | RDFParseException e) {
       throw new RDFImportException(e);
     } catch (GraphConfig.GraphConfigNotFound e) {
       throw new RDFImportException(

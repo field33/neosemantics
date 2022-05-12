@@ -63,12 +63,12 @@ public class RDFProcedures extends CommonProcedures {
     RDFFormat rdfFormat = null;
     ImportResults importResults = new ImportResults();
     try {
-      checkConstraintExist();
+//      checkConstraintExist();
       conf = new RDFParserConfig(props, (overrideGC != null ? overrideGC : new GraphConfig(tx)));
       rdfFormat = getFormat(format);
       statementLoader = new DirectStatementLoader(db, tx, conf, log);
-    } catch (RDFImportPreRequisitesNotMet e) {
-      importResults.setTerminationKO(e.getMessage());
+//    } catch (RDFImportPreRequisitesNotMet e) {
+//      importResults.setTerminationKO(e.getMessage());
     } catch (GraphConfig.GraphConfigNotFound e) {
       importResults
           .setTerminationKO("A Graph Config is required for RDF importing procedures to run");
@@ -166,12 +166,12 @@ public class RDFProcedures extends CommonProcedures {
     DeleteResults deleteResults = new DeleteResults();
 
     try {
-      checkConstraintExist();
+//      checkConstraintExist();
       conf = new RDFParserConfig(props, new GraphConfig(tx));
       rdfFormat = getFormat(format);
       statementDeleter = new DirectStatementDeleter(db, tx, conf, log);
-    } catch (RDFImportPreRequisitesNotMet e) {
-      deleteResults.setTerminationKO(e.getMessage());
+//    } catch (RDFImportPreRequisitesNotMet e) {
+//      deleteResults.setTerminationKO(e.getMessage());
     } catch (GraphConfig.GraphConfigNotFound e) {
       deleteResults
           .setTerminationKO("A Graph Config is required for RDF importing procedures to run");
@@ -196,13 +196,14 @@ public class RDFProcedures extends CommonProcedures {
   }
 
   protected DirectStatementLoader doAdd(String rdfFragment, Map<String, Object> props, RDFFormat format, boolean isRel)
-          throws RDFImportPreRequisitesNotMet, IOException, GraphConfig.GraphConfigNotFound {
+//          throws RDFImportPreRequisitesNotMet, IOException, GraphConfig.GraphConfigNotFound {
+            throws IOException, GraphConfig.GraphConfigNotFound {
 
     DirectStatementLoader statementAdder = null;
     RDFParserConfig conf = null;
     RDFProcedures.ImportResults importResults = new RDFProcedures.ImportResults();
 
-    checkConstraintExist();
+//    checkConstraintExist();
     conf = new RDFParserConfig(props, new GraphConfig(tx));
     statementAdder = (isRel?new DirectRelationshipAdder(db, tx, conf, log):new DirectNodeAdder(db, tx, conf, log));
     RDFParser rdfParser = Rio.createParser(format);

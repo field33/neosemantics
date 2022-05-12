@@ -49,12 +49,12 @@ public class SKOSLoadProcedures extends RDFProcedures {
     RDFFormat rdfFormat = null;
     ImportResults importResults = new ImportResults();
     try {
-      checkConstraintExist();
+//      checkConstraintExist();
       conf = new RDFParserConfig(props, new GraphConfig(tx));
       rdfFormat = getFormat(format);
       skosImporter = new SkosImporter(db, tx, conf, log);
-    } catch (RDFImportPreRequisitesNotMet e) {
-      importResults.setTerminationKO(e.getMessage());
+//    } catch (RDFImportPreRequisitesNotMet e) {
+//      importResults.setTerminationKO(e.getMessage());
     } catch (RDFImportBadParams e) {
       importResults.setTerminationKO(e.getMessage());
     } catch (GraphConfig.GraphConfigNotFound e) {
